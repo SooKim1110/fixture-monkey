@@ -38,6 +38,7 @@ import com.navercorp.fixturemonkey.arbitrary.ArbitraryExpression;
 import com.navercorp.fixturemonkey.resolver.ArbitraryManipulator;
 import com.navercorp.fixturemonkey.resolver.ArbitraryResolver;
 import com.navercorp.fixturemonkey.resolver.ArbitraryTraverser;
+import com.navercorp.fixturemonkey.resolver.ExpressionMapNodeResolver;
 import com.navercorp.fixturemonkey.resolver.ExpressionNodeResolver;
 import com.navercorp.fixturemonkey.resolver.NodeSetArbitraryManipulator;
 import com.navercorp.fixturemonkey.resolver.NodeSetDecomposedValueManipulator;
@@ -96,6 +97,32 @@ public final class ArbitraryBuilder<T> extends com.navercorp.fixturemonkey.Arbit
 				new ArbitraryManipulator(
 					nodeResolver,
 					new NodeSetDecomposedValueManipulator<>(traverser, value)
+				)
+			);
+		}
+		return this;
+	}
+
+	public ArbitraryBuilder<T> set(
+		String expression,
+		List<Object> keys,
+		@Nullable Object value
+	) {
+		ExpressionMapNodeResolver nodeResolver = new ExpressionMapNodeResolver(ArbitraryExpression.from(expression), keys);
+		if (value instanceof Arbitrary) {
+			manipulators.add(
+				new ArbitraryManipulator(
+					nodeResolver,
+					new NodeSetArbitraryManipulator<>((Arbitrary<?>)value)
+				)
+			);
+		} else if (value == null) {
+			// TODO: setNull
+		} else {
+			manipulators.add(
+				new ArbitraryManipulator(
+					nodeResolver,
+					new NodeSetDecomposedValueManipulator<>(value)
 				)
 			);
 		}

@@ -85,4 +85,9 @@ final class ArbitraryNode {
 	public void setActive(boolean active) {
 		this.active = active;
 	}
+
+	//isLeafNode()
+	// public boolean isLeafNode() {
+	// 	return (this.getChildren().isEmpty() || isMap()) && this.getArbitrary() != null;
+	// }
 }
