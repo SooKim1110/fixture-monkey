@@ -37,8 +37,6 @@ import com.navercorp.fixturemonkey.api.generator.ArbitraryProperty;
 public final class ArbitraryExpression implements Comparable<ArbitraryExpression> {
 	private final List<Exp> expList;
 
-	private List<Object> keyList;
-
 	private ArbitraryExpression(List<Exp> expList) {
 		this.expList = expList;
 	}
@@ -48,14 +46,6 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 			.map(Exp::new)
 			.collect(toList());
 	}
-
-	private ArbitraryExpression(String expression, List<Object> keyList) {
-		expList = Arrays.stream(expression.split("\\."))
-			.map(Exp::new)
-			.collect(toList());
-		this.keyList = keyList;
-	}
-
 
 	public static ArbitraryExpression from(String expression) {
 		return new ArbitraryExpression(expression);
@@ -190,8 +180,6 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 		private final String name;
 		private final List<ExpIndex> index;
 
-
-
 		private Exp(String name, List<ExpIndex> indices) {
 			this.name = name;
 			this.index = indices;
@@ -303,11 +291,6 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 				sameIndex = indexEquals(arbitraryProperty.getElementIndex()); // notNull
 			}
 			return samePropertyName && sameIndex;
-		}
-
-		public boolean matchEntryKey(ArbitraryProperty arbitraryProperty) {
-			boolean samePropertyName = nameEquals(arbitraryProperty.getResolvePropertyName());
-			return samePropertyName;
 		}
 
 		public boolean isNotHeadName() {
