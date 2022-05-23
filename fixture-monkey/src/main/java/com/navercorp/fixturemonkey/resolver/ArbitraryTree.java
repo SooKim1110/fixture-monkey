@@ -38,8 +38,12 @@ import net.jqwik.api.Arbitrary;
 import com.navercorp.fixturemonkey.api.generator.ArbitraryContainerInfo;
 import com.navercorp.fixturemonkey.api.generator.ArbitraryGeneratorContext;
 import com.navercorp.fixturemonkey.api.generator.ArbitraryProperty;
+import com.navercorp.fixturemonkey.api.generator.ArbitraryPropertyGenerator;
+import com.navercorp.fixturemonkey.api.generator.ArbitraryPropertyGeneratorContext;
 import com.navercorp.fixturemonkey.api.option.GenerateOptions;
 import com.navercorp.fixturemonkey.api.property.MapEntryElementProperty;
+import com.navercorp.fixturemonkey.api.property.MapKeyElementProperty;
+import com.navercorp.fixturemonkey.api.property.Property;
 import com.navercorp.fixturemonkey.api.random.Randoms;
 import com.navercorp.fixturemonkey.arbitrary.ArbitraryExpression;
 import com.navercorp.fixturemonkey.arbitrary.ArbitraryExpression.Cursor;
@@ -69,7 +73,7 @@ final class ArbitraryTree {
 		return selectedNodes;
 	}
 
-	List<ArbitraryNode> findAllorInsert(ArbitraryExpression arbitraryExpression, List<Object> keys) {
+	List<ArbitraryNode> findAll(ArbitraryExpression arbitraryExpression, List<Object> keys) {
 		LinkedList<ArbitraryNode> selectedNodes = new LinkedList<>();
 		selectedNodes.add(rootNode);
 
@@ -77,11 +81,11 @@ final class ArbitraryTree {
 		int keyIdx = 0;
 		for (Cursor cursor : cursors) {
 			if (cursor.getName().equals("?")) {
-				// selectedNodes는 MapEntry
-				selectedNodes = retrieveNextMatchingMapNodes(selectedNodes, keys.get(keyIdx), keyIdx == keys.size()-1);
+				// selectedNodes는 key가 일치하는 MapEntry
+				selectedNodes = retrieveNextMatchingMapNodes(selectedNodes, keys.get(keyIdx));
 				keyIdx++;
 			} else {
-				//
+				// Todo: selectedNode가 MapEntry일 때 valueNode로 내려가기 -> retrieveNextMatchingMapNodes 에서 마지막 ?면 value노드를 리턴하도록?
 				selectedNodes = retrieveNextMatchingNodes(selectedNodes, cursor);
 			}
 		}
@@ -89,48 +93,33 @@ final class ArbitraryTree {
 		return selectedNodes;
 	}
 
-	private LinkedList<ArbitraryNode> retrieveNextMatchingMapNodes(List<ArbitraryNode> selectedNodes, Object key, boolean isEnd) {
+	private LinkedList<ArbitraryNode> retrieveNextMatchingMapNodes(List<ArbitraryNode> selectedNodes, Object key) {
 		LinkedList<ArbitraryNode> nextNodes = new LinkedList<>();
 		for (ArbitraryNode selectedNode: selectedNodes) {
-			//selectedNode는 map 노드 일 것. 아니면 map 까지 내려옴
+			// selectedNode는 map 노드 일 것. 아니면 map 노드까지 내려옴
 			if (selectedNode.getArbitraryProperty().getProperty() instanceof MapEntryElementProperty) {
 				selectedNode = selectedNode.getChildren().get(1);
 			}
 			List<ArbitraryNode> children = selectedNode.getChildren();
 			boolean hasKey = false;
 			for (ArbitraryNode child: children) {
-				//child should be Map Entry. Check if key matches cursor.
-				if (key.equals(child.getChildren().get(0).getArbitrary())) {
+				//child should be Map Entry.
+				MapKeyElementProperty mapKeyElementProperty = (MapKeyElementProperty)child.getChildren().get(0).getProperty();
+				if (key.equals(mapKeyElementProperty.getValue())) {
 					hasKey = true;
 					child.setArbitraryProperty(child.getArbitraryProperty().withNullInject(NOT_NULL_INJECT));
 					nextNodes.add(child);
 				}
 			}
-			//key가 없는 경우 만들어줘야함
-			if (!hasKey) {
-				//무조건 하나를 추가해준다고 일단 가정
-				MapInsertNewNode(selectedNode, key);
-			}
+			//Todo: key가 없는 경우 entry를 새로 생성.
+			// if (!hasKey) {
+			// 	MapInsertNewEntry(selectedNode, key);
+			// }
 		}
 		return nextNodes;
 	}
 
-	private void MapInsertNewNode(ArbitraryNode arbitraryNode, Object key){
-		// ArbitraryProperty arbitraryProperty = arbitraryNode.getArbitraryProperty();
-		// int minSize = arbitraryProperty.getContainerInfo().getElementMinSize();
-		// int maxSize = arbitraryProperty.getContainerInfo().getElementMaxSize();
-		// ArbitraryContainerInfo containerInfo = arbitraryProperty.getContainerInfo()
-		// 	.withElementMinSize(minSize)
-		// 	.withElementMaxSize(maxSize);
-		//
-		// ArbitraryNode traversedNode = traverser.traverse(arbitraryNode.getProperty(), containerInfo);
-		// ArbitraryProperty traversedNodeArbitraryProperty = traversedNode.getArbitraryProperty();
-		// arbitraryNode.setArbitraryProperty(
-		// 	arbitraryProperty
-		// 		.withChildProperties(traversedNodeArbitraryProperty.getChildProperties())
-		// 		.withContainerInfo(traversedNodeArbitraryProperty.getContainerInfo())
-		// );
-		// arbitraryNode.setChildren(traversedNode.getChildren());
+	private void MapInsertNewEntry(ArbitraryNode arbitraryNode, Object key){
 	}
 
 	private LinkedList<ArbitraryNode> retrieveNextMatchingNodes(List<ArbitraryNode> selectedNodes, Cursor cursor) {
@@ -139,7 +128,6 @@ final class ArbitraryTree {
 			List<ArbitraryNode> children = selectedNode.getChildren();
 			for (ArbitraryNode child : children) {
 				if (cursor.match(child.getArbitraryProperty())) {
-					// 왜 Not null inject?
 					child.setArbitraryProperty(child.getArbitraryProperty().withNullInject(NOT_NULL_INJECT));
 					nextNodes.add(child);
 				}

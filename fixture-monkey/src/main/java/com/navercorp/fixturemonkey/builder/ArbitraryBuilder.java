@@ -105,10 +105,11 @@ public final class ArbitraryBuilder<T> extends com.navercorp.fixturemonkey.Arbit
 
 	public ArbitraryBuilder<T> set(
 		String expression,
-		List<Object> keys,
+		List<? extends Object> keys,
 		@Nullable Object value
 	) {
-		ExpressionMapNodeResolver nodeResolver = new ExpressionMapNodeResolver(ArbitraryExpression.from(expression), keys);
+		ExpressionMapNodeResolver nodeResolver = new ExpressionMapNodeResolver(ArbitraryExpression.from(expression),
+			(List<Object>)keys);
 		if (value instanceof Arbitrary) {
 			manipulators.add(
 				new ArbitraryManipulator(
@@ -122,7 +123,7 @@ public final class ArbitraryBuilder<T> extends com.navercorp.fixturemonkey.Arbit
 			manipulators.add(
 				new ArbitraryManipulator(
 					nodeResolver,
-					new NodeSetDecomposedValueManipulator<>(value)
+					new NodeSetDecomposedValueManipulator<>(traverser, value)
 				)
 			);
 		}

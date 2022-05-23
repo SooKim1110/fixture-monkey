@@ -29,6 +29,7 @@ import org.apiguardian.api.API.Status;
 
 import net.jqwik.api.Arbitraries;
 
+import com.navercorp.fixturemonkey.api.property.MapKeyElementProperty;
 import com.navercorp.fixturemonkey.api.property.Property;
 import com.navercorp.fixturemonkey.api.type.Types;
 
@@ -87,12 +88,20 @@ public final class NodeSetDecomposedValueManipulator<T> implements NodeManipulat
 		List<ArbitraryNode> children = arbitraryNode.getChildren();
 		arbitraryNode.setArbitraryProperty(arbitraryNode.getArbitraryProperty().withNullInject(NOT_NULL_INJECT));
 		if (children.isEmpty()) {
+			if (arbitraryNode.getProperty() instanceof MapKeyElementProperty) {
+				MapKeyElementProperty mapKeyElementProperty = (MapKeyElementProperty)arbitraryNode.getProperty();
+				mapKeyElementProperty.setValue(value);
+			}
 			arbitraryNode.setArbitrary(Arbitraries.just(value));
 			return;
 		}
 
 		for (ArbitraryNode child : children) {
 			Property childProperty = child.getProperty();
+			if (childProperty instanceof MapKeyElementProperty) {
+				MapKeyElementProperty mapKeyElementProperty = (MapKeyElementProperty)childProperty;
+				mapKeyElementProperty.setValue(childProperty.getValue(value));
+			}
 			setValue(child, childProperty.getValue(value));
 		}
 	}

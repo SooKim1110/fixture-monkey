@@ -44,6 +44,8 @@ public final class MapKeyElementProperty implements Property {
 
 	private final List<Annotation> annotations;
 
+	private Object value;
+
 	public MapKeyElementProperty(
 		Property mapProperty,
 		AnnotatedType keyType,
@@ -111,5 +113,13 @@ public final class MapKeyElementProperty implements Property {
 		}
 
 		throw new IllegalArgumentException("given value is not Map Entry. " + obj.getClass());
+	}
+
+	public Object getValue() {
+		return value;
+	}
+
+	public void setValue(Object value) {
+		this.value = value;
 	}
 }

@@ -21,42 +21,22 @@ import com.navercorp.fixturemonkey.test.FixtureMonkeyV04TestSpecs.SimpleObject;
 public class MapManipulatorTestSpecs {
 	@Setter
 	@Getter
-	public static class ComplexObject {
-		// private String str;
-		// private int integer;
-		// private Long wrapperLong;
-		// private List<String> strList;
-		// private Set<String> strSet;
-		// private FixtureMonkeyV04TestSpecs.SimpleEnum enumValue;
-		// private LocalDateTime localDateTime;
-		// private FixtureMonkeyV04TestSpecs.SimpleObject object;
-		// private List<FixtureMonkeyV04TestSpecs.SimpleObject> list;
-		// private Map<String, FixtureMonkeyV04TestSpecs.SimpleObject> map;
-		// private Map.Entry<String, FixtureMonkeyV04TestSpecs.SimpleObject> mapEntry;
+	public static class MapObject {
 
-		private Map<String, Map<String, String>> strMapMap;
+		private Map<String, Map<String, String>> strKeyMap;
+		private Map<Map<String, String>, String> mapKeyMap;
+		private Map<String, String> strMap;
+		private Map<List<String>, String> listMap;
 
 		@Override
 		public String toString() {
-			return "ComplexObject{" +
-				"strMapMap=" + strMapMap +
+			return "MapObject{" +
+				"strKeyMap=" + strKeyMap +
+				", mapKeyMap=" + mapKeyMap +
+				", strMap=" + strMap +
 				'}';
 		}
-	}
 
-	public enum SimpleEnum {
-		ENUM_1, ENUM_2, ENUM_3, ENUM_4
-	}
 
-	@Getter
-	@Setter
-	@EqualsAndHashCode
-	public static class SimpleObject {
-		private String str;
-		private Optional<String> optionalString;
-		private OptionalInt optionalInt;
-		private OptionalLong optionalLong;
-		private OptionalDouble optionalDouble;
-		private Instant instant;
 	}
 }
