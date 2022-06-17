@@ -21,7 +21,9 @@ package com.navercorp.fixturemonkey.test;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -224,4 +226,60 @@ class CollectionSpecTest {
 
 		then(actual.getComplexObject().getSimpleObject().getStr()).isEqualTo("test");
 	}
+
+	// @Property
+	// void mapComplexAdd() {
+	// 	Map<String, String> map = new HashMap<>();
+	// 	map.put("key1", "val1");
+	// 	MapObject actual = SUT.giveMeBuilder(MapObject.class)
+	// 		.spec("mapKeyValueMap", m -> {
+	// 			m.value(v-> {
+	// 				v.value("value");
+	// 				v.key("key");
+	// 			});
+	// 		})
+	// 		.sample();
+	//
+	// 	MapObject actual2 = SUT.giveMeBuilder(MapObject.class)
+	// 		.spec("mapKeyValueMap", m -> {
+	// 			m.value(v-> {
+	// 				v.value("value");
+	// 			});
+	// 			m.value(v-> {
+	// 				v.key("key");
+	// 			});
+	// 		})
+	// 		.sample();
+	//
+	// 	then(actual);
+	// }
+
+	@Property(tries = 1)
+	void expression() {
+		System.out.println(SUT.giveMeBuilder(MapObject.class)
+			.expressions("map[K][K].field[0][1].field[K][V]"));
+	}
+
+	@Property
+	void mapAddKey2() {
+		MapObject actual = SUT.giveMeBuilder(MapObject.class)
+			.setKey("mapKeyMap[K][K]", "key")
+			.sample();
+
+		List<String> keyList = actual.getMapKeyMap().keySet().stream()
+			.flatMap(it->it.keySet().stream()).collect(Collectors.toList());
+		then(keyList).contains("key");
+	}
+
+	@Property
+	void mapAddValueAddKey2() {
+		MapObject actual = SUT.giveMeBuilder(MapObject.class)
+			.setKey("mapValueMap[V][K]", "value")
+			.sample();
+
+		List<String> valueList = actual.getMapValueMap().values().stream()
+			.flatMap(it-> it.keySet().stream()).collect(Collectors.toList());
+		then(valueList).contains("value");
+	}
+
 }

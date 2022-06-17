@@ -49,6 +49,7 @@ import com.navercorp.fixturemonkey.api.type.LazyAnnotatedType;
 import com.navercorp.fixturemonkey.api.type.Types;
 import com.navercorp.fixturemonkey.arbitrary.ArbitraryExpression;
 import com.navercorp.fixturemonkey.customizer.CollectionSpec;
+import com.navercorp.fixturemonkey.customizer.ExpressionToSpecConverter;
 import com.navercorp.fixturemonkey.resolver.ApplyExpressionStrictModeResolver;
 import com.navercorp.fixturemonkey.resolver.ApplyNodeCountManipulator;
 import com.navercorp.fixturemonkey.resolver.ArbitraryManipulator;
@@ -164,6 +165,19 @@ public final class ArbitraryBuilder<T> extends com.navercorp.fixturemonkey.Arbit
 		List<ArbitraryManipulator> mapManipulators = collectionSpec.getArbitraryManipulators();
 		manipulators.addAll(mapManipulators);
 		return this;
+	}
+
+	public ArbitraryBuilder<T> setKey(String expression, Object key) {
+		ExpressionToSpecConverter converter = new ExpressionToSpecConverter(traverser);
+		CollectionSpec spec = converter.convertToCollectionSpec(expression, key);
+		List<ArbitraryManipulator> mapManipulators = spec.getArbitraryManipulators();
+		manipulators.addAll(mapManipulators);
+		return this;
+	}
+
+	public List<String> expressions(String expression) {
+		ExpressionToSpecConverter converter = new ExpressionToSpecConverter(traverser);
+		return converter.parse(expression);
 	}
 
 	@Override
