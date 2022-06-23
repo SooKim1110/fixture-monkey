@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -112,6 +113,8 @@ public final class DefaultArbitraryBuilder<T> extends OldArbitraryBuilderImpl<T>
 		int limit
 	) {
 		NodeResolver nodeResolver = convertToExpressionNodeResolver(expression);
+		List<ArbitraryManipulator> arbitraryManipulators = convertToArbitraryManipulators(nodeResolver, value);
+
 		if (value instanceof Arbitrary) {
 			manipulators.add(
 				new ArbitraryManipulator(
@@ -366,10 +369,15 @@ public final class DefaultArbitraryBuilder<T> extends OldArbitraryBuilderImpl<T>
 	}
 
 	private NodeResolver convertToExpressionNodeResolver(String expression) {
-		NodeResolver nodeResolver = new ExpressionNodeResolver(ArbitraryExpression.from(expression));
+		NodeResolver nodeResolver = ArbitraryExpression.from(expression).toNodeResolver();
 		if (generateOptions.isExpressionStrictMode()) {
 			nodeResolver = new ApplyExpressionStrictModeResolver(nodeResolver);
 		}
 		return nodeResolver;
+	}
+
+	private List<ArbitraryManipulator> convertToArbitraryManipulators(NodeResolver nodeResolver, Object value) {
+		List<ArbitraryManipulator> arbitraryManipulators = new ArrayList<>();
+
 	}
 }

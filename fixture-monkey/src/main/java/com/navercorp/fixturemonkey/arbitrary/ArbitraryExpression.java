@@ -27,12 +27,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.apiguardian.api.API;
-import org.apiguardian.api.API.Status;
-
 import com.navercorp.fixturemonkey.api.generator.ArbitraryProperty;
+import com.navercorp.fixturemonkey.customizer.ContainerSpec;
+import com.navercorp.fixturemonkey.resolver.ArbitraryManipulator;
+import com.navercorp.fixturemonkey.resolver.ArbitraryTraverser;
+import com.navercorp.fixturemonkey.resolver.ExpressionNodeResolver;
+import com.navercorp.fixturemonkey.resolver.NodeFieldResolver;
+import com.navercorp.fixturemonkey.resolver.NodeIndexResolver;
+import com.navercorp.fixturemonkey.resolver.NodeKeyValueResolver;
+import com.navercorp.fixturemonkey.resolver.NodeResolver;
 
 public final class ArbitraryExpression implements Comparable<ArbitraryExpression> {
 	private final List<Exp> expList;
@@ -61,25 +67,45 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 		return new ArbitraryExpression(newStringExpression);
 	}
 
-	@API(since = "0.4.0", status = Status.EXPERIMENTAL)
-	public ArbitraryExpression pollLast() {
-		if (expList.isEmpty()) {
-			return this;
+	public NodeResolver toNodeResolver() {
+		NodeResolver nodeResolver = new ExpressionNodeResolver(ArbitraryExpression.from(HEAD_NAME));
+		for (Exp exp : expList) {
+			nodeResolver = exp.toNodeResolver(nodeResolver);
 		}
-
-		List<Exp> newExpList = new ArrayList<>(this.expList);
-		int lastIndex = newExpList.size() - 1;
-		Exp lastExp = newExpList.get(lastIndex);
-		newExpList.remove(lastIndex);
-
-		if (!lastExp.index.isEmpty()) {
-			List<ExpIndex> newExpIndexList = new ArrayList<>(lastExp.index);
-			newExpIndexList.remove(newExpIndexList.size() - 1);
-			lastExp = new Exp(lastExp.name, newExpIndexList);
-			newExpList.add(lastExp);
-		}
-		return new ArbitraryExpression(newExpList);
+		return nodeResolver;
 	}
+
+	public List<ArbitraryManipulator> toArbitraryManipulatorList() {
+		List<ArbitraryManipulator> arbitraryManipulators = new ArrayList<>();
+		for (Exp exp : expList) {
+			for (ExpElement expElement : exp.elements) {
+				if (expElement instanceof ExpKey) {
+
+				}
+			}
+			arbitraryManipulators.add();
+		}
+	}
+
+	// @API(since = "0.4.0", status = Status.EXPERIMENTAL)
+	// public ArbitraryExpression pollLast() {
+	// 	if (expList.isEmpty()) {
+	// 		return this;
+	// 	}
+	//
+	// 	List<Exp> newExpList = new ArrayList<>(this.expList);
+	// 	int lastIndex = newExpList.size() - 1;
+	// 	Exp lastExp = newExpList.get(lastIndex);
+	// 	newExpList.remove(lastIndex);
+	//
+	// 	if (!lastExp.index.isEmpty()) {
+	// 		List<ExpIndex> newExpIndexList = new ArrayList<>(lastExp.index);
+	// 		newExpIndexList.remove(newExpIndexList.size() - 1);
+	// 		lastExp = new Exp(lastExp.name, newExpIndexList);
+	// 		newExpList.add(lastExp);
+	// 	}
+	// 	return new ArbitraryExpression(newExpList);
+	// }
 
 	@Override
 	public int compareTo(ArbitraryExpression arbitraryExpression) {
@@ -131,7 +157,14 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 			.collect(toList());
 	}
 
-	private static final class ExpIndex implements Comparable<ExpIndex> {
+	private interface ExpElement {
+		String toString();
+
+		NodeResolver toNodeResolver(NodeResolver prevResolver);
+		// Cursor toCursor(); // IndexCursor, NameCursor, MapCursor
+	}
+
+	private static final class ExpIndex implements Comparable<ExpIndex>, ExpElement {
 		public static final ExpIndex ALL_INDEX_EXP_INDEX = new ExpIndex(NO_OR_ALL_INDEX_INTEGER_VALUE);
 
 		private final int index;
@@ -146,11 +179,6 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 
 		public boolean equalsIgnoreAllIndex(ExpIndex expIndex) {
 			return this.index == expIndex.index;
-		}
-
-		@Override
-		public int compareTo(ExpIndex expIndex) {
-			return Integer.compare(this.index, expIndex.index);
 		}
 
 		@Override
@@ -174,19 +202,73 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 		public String toString() {
 			return index == NO_OR_ALL_INDEX_INTEGER_VALUE ? ALL_INDEX_STRING : String.valueOf(index);
 		}
+
+		@Override
+		public NodeResolver toNodeResolver(NodeResolver prevResolver) {
+			return new NodeIndexResolver(index, prevResolver);
+		}
+
+		@Override
+		public int compareTo(ExpIndex obj) {
+			return Integer.compare(index, obj.index);
+		}
+	}
+
+	private static final class ExpKey implements ExpElement {
+		private final String key;
+
+		public ExpKey(String key) {
+			this.key = key;
+		}
+
+		@Override
+		public NodeResolver toNodeResolver(NodeResolver prevResolver) {
+			if (prevResolver instanceof NodeKeyValueResolver) {
+				return new NodeKeyValueResolver(false, prevResolver);
+			}
+			return new NodeKeyValueResolver(true, prevResolver);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+			ExpKey expKey = (ExpKey)obj;
+			return key.equals(expKey.key);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode(key);
+		}
+
+		public String toString() {
+			return key;
+		}
+
 	}
 
 	private static final class Exp implements Comparable<Exp> {
 		private final String name;
-		private final List<ExpIndex> index;
+		private final List<ExpElement> elements;
 
-		private Exp(String name, List<ExpIndex> indices) {
-			this.name = name;
-			this.index = indices;
+		public NodeResolver toNodeResolver(NodeResolver prevResolver) {
+			NodeResolver nodeResolver = new NodeFieldResolver(
+				name,
+				prevResolver
+			);
+			for (ExpElement expElement : elements) {
+				nodeResolver = expElement.toNodeResolver(nodeResolver);
+			}
+			return nodeResolver;
 		}
 
 		public Exp(String expression) {
-			index = new ArrayList<>();
+			elements = new ArrayList<>();
 			int li = expression.indexOf('[');
 			int ri = expression.indexOf(']');
 
@@ -200,11 +282,17 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 				this.name = expression.substring(0, li);
 				while (li != -1 && ri != -1) {
 					if (ri - li > 1) {
-						String indexString = expression.substring(li + 1, ri);
-						final int indexValue = indexString.equals(ALL_INDEX_STRING)
-							? NO_OR_ALL_INDEX_INTEGER_VALUE
-							: Integer.parseInt(indexString);
-						this.index.add(new ExpIndex(indexValue));
+						String elementString = expression.substring(li + 1, ri);
+						if (elementString.equals(ALL_INDEX_STRING)) {
+							this.elements.add(new ExpIndex(NO_OR_ALL_INDEX_INTEGER_VALUE));
+						} else {
+							try {
+								int indexValue = Integer.parseInt(elementString);
+								this.elements.add(new ExpIndex(indexValue));
+							} catch (NumberFormatException e) {
+								this.elements.add(new ExpKey(elementString));
+							}
+						}
 					}
 					expression = expression.substring(ri + 1);
 					li = expression.indexOf('[');
@@ -213,12 +301,14 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 			}
 		}
 
+		@Deprecated
 		public List<Cursor> toCursors() {
 			List<Cursor> steps = new ArrayList<>();
 			String expName = this.getName();
 			steps.add(new ExpNameCursor(expName));
-			steps.addAll(this.getIndex().stream()
-				.map(it -> new ExpIndexCursor(expName, it.getIndex()))
+			steps.addAll(this.getElements().stream()
+				.filter(it -> it instanceof ExpIndex)
+				.map(it -> new ExpIndexCursor(expName, ((ExpIndex)it).getIndex()))
 				.collect(toList()));
 			return steps;
 		}
@@ -227,34 +317,34 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 			return name;
 		}
 
-		public List<ExpIndex> getIndex() {
-			return index;
+		public List<ExpElement> getElements() {
+			return elements;
 		}
 
 		public String toString() {
-			String indexBrackets = index.stream()
+			String elementsBrackets = elements.stream()
 				.map(i -> "[" + i.toString() + "]")
 				.collect(Collectors.joining());
-			return name + indexBrackets;
+			return name + elementsBrackets;
 		}
 
 		@Override
 		public int compareTo(Exp exp) {
-			List<ExpIndex> indices = this.getIndex();
-			List<ExpIndex> oIndices = exp.getIndex();
+			List<ExpElement> elements = this.getElements();
+			List<ExpElement> oElements = exp.getElements();
 
 			if (exp.name.equals(this.name)) {
-				int indexLength = Math.min(oIndices.size(), indices.size());
-				for (int i = 0; i < indexLength; i++) {
-					ExpIndex index = indices.get(i);
-					ExpIndex oIndex = oIndices.get(i);
-					int indexCompare = oIndex.compareTo(index);
-					if (indexCompare != 0) {
-						return indexCompare;
+				int elementLength = Math.min(oElements.size(), elements.size());
+				for (int i = 0; i < elementLength; i++) {
+					ExpElement element = elements.get(i);
+					ExpElement oElement = oElements.get(i);
+					boolean elementEquals = oElement.equals(element);
+					if (!elementEquals) {
+						return 0;
 					}
 				}
 			}
-			return Integer.compare(indices.size(), oIndices.size());
+			return Integer.compare(elements.size(), oElements.size());
 		}
 
 		@Override
@@ -266,12 +356,12 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 				return false;
 			}
 			Exp exp = (Exp)obj;
-			return name.equals(exp.name) && index.equals(exp.index);
+			return name.equals(exp.name) && elements.equals(exp.elements);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(name, index);
+			return Objects.hash(name, elements);
 		}
 	}
 
@@ -357,4 +447,61 @@ public final class ArbitraryExpression implements Comparable<ArbitraryExpression
 		}
 	}
 
+	// public static final class SpecConverter {
+	// 	private final ArbitraryTraverser traverser;
+	//
+	// 	public SpecConverter(ArbitraryTraverser traverser) {
+	// 		this.traverser = traverser;
+	// 	}
+	//
+	// 	public String getContainerExpression(List<Exp> expList) {
+	// 		StringBuilder builder = new StringBuilder();
+	// 		for (Exp exp : expList) {
+	// 			builder.append(exp.name);
+	// 			for (ExpElement expElement : exp.elements) {
+	// 				if (expElement instanceof ExpIndex) {
+	// 					builder.append(expElement);
+	// 				} else if (expElement instanceof ExpKey) {
+	// 					return builder.toString();
+	// 				}
+	// 			}
+	// 		}
+	// 		return builder.toString();
+	// 	}
+	//
+	// 	public ContainerSpec convertToContainerSpec(String expression, Object value) {
+	// 		// 0. expression 파싱하기
+	// 		List<Exp> expList = ArbitraryExpression.from(expression).expList;
+	// 		// 1. 첫 Key 앞까지 Expression 사용해서 CollectionSpec 만들기
+	// 		String containerExpression = getContainerExpression(expList);
+	// 		ContainerSpec containerSpec = new ContainerSpec(
+	// 			traverser,
+	// 			new ExpressionNodeResolver(ArbitraryExpression.from(containerExpression))
+	// 		);
+	// 		// 2. 마지막 표현식을 토대로 연산 만들기
+	// 		Exp lastExp = expList.get(expList.size() - 1);
+	// 		ExpElement lastElement = lastExp.elements.get(lastExp.elements.size() - 1);
+	// 		Consumer<ContainerSpec> consumer = entry(((ExpKey)lastElement).getKey(), value);
+	//
+	// 		// 2. key 개수에 따라 key()
+	// 		// for (int i = expressions.size() - 2; i > 0; i--) {
+	// 		// 	consumer = key(consumer);
+	// 		// }
+	//
+	// 		consumer.accept(containerSpec);
+	// 		return containerSpec;
+	// 	}
+	//
+	// 	public Consumer<ContainerSpec> key(Consumer<ContainerSpec> consumer) {
+	// 		return it -> {
+	// 			it.key(consumer);
+	// 		};
+	// 	}
+	//
+	// 	public Consumer<ContainerSpec> entry(Object key, Object value) {
+	// 		return it -> {
+	// 			it.entry(key, value);
+	// 		};
+	// 	}
+	// }
 }

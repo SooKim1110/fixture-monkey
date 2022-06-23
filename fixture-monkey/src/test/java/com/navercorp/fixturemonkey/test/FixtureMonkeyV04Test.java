@@ -42,6 +42,7 @@ import com.navercorp.fixturemonkey.ArbitraryBuilder;
 import com.navercorp.fixturemonkey.LabMonkey;
 import com.navercorp.fixturemonkey.api.type.TypeReference;
 import com.navercorp.fixturemonkey.test.FixtureMonkeyV04TestSpecs.ComplexObject;
+import com.navercorp.fixturemonkey.test.FixtureMonkeyV04TestSpecs.MapObject;
 import com.navercorp.fixturemonkey.test.FixtureMonkeyV04TestSpecs.SimpleObject;
 
 class FixtureMonkeyV04Test {
@@ -513,6 +514,39 @@ class FixtureMonkeyV04Test {
 		then(actual).anyMatch("test"::equals);
 		then(actual).anyMatch(it -> !"test".equals(it));
 	}
+
+	// @Property
+	// void setMap() {
+	// 	// when
+	// 	MapObject actual = SUT.giveMeBuilder(MapObject.class)
+	// 		.set("strMap[key]", "value")
+	// 		.sample();
+	//
+	// 	// then
+	// 	then(actual.getStrMap().get("key")).isEqualTo("value");
+	// }
+	//
+	// @Property
+	// void setMapValueMap() {
+	// 	// when
+	// 	MapObject actual = SUT.giveMeBuilder(MapObject.class)
+	// 		.set("strMap[key1][key2]", "value")
+	// 		.sample();
+	//
+	// 	// then
+	// 	// then(actual.getStrMap().get("key1").get("key2")).isEqualTo("value");
+	// }
+	//
+	// @Property
+	// void setListValueMap() {
+	// 	// MapObject actual = SUT.giveMeBuilder(MapObject.class)
+	// 	// 	.set("strMap[")
+	// 	// 	.set("strMap[key1][0]", "value")
+	// 	// 	.sample();
+	// 	//
+	// 	// // then
+	// 	// then(actual.getStrMap().get("key")).isEqualTo("value");
+	// }
 
 	@Property
 	void setNull() {

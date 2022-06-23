@@ -49,17 +49,17 @@ public final class ArbitraryTree<T> {
 		selectNodes.add(head);
 		head.setManipulated(true);
 		List<ArbitraryNode> nextNodes = new ArrayList<>();
-
-		List<Cursor> cursors = arbitraryExpression.toCursors();
-		for (Cursor cursor : cursors) {
-			while (!selectNodes.isEmpty()) {
-				ArbitraryNode<?> selectNode = selectNodes.poll();
-				nextNodes.addAll(selectNode.findChildrenByCursor(cursor));
-			}
-			selectNodes.addAll(nextNodes);
-			nextNodes.clear();
-		}
-		Collections.shuffle(selectNodes, Randoms.current());
+		//
+		// List<Cursor> cursors = arbitraryExpression.toCursors();
+		// for (Cursor cursor : cursors) {
+		// 	while (!selectNodes.isEmpty()) {
+		// 		ArbitraryNode<?> selectNode = selectNodes.poll();
+		// 		nextNodes.addAll(selectNode.findChildrenByCursor(cursor));
+		// 	}
+		// 	selectNodes.addAll(nextNodes);
+		// 	nextNodes.clear();
+		// }
+		// Collections.shuffle(selectNodes, Randoms.current());
 		return selectNodes;
 	}
 

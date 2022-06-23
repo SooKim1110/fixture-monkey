@@ -66,4 +66,10 @@ class FixtureMonkeyV04TestSpecs {
 		private OptionalDouble optionalDouble;
 		private Instant instant;
 	}
+
+	@Setter
+	@Getter
+	public static class MapObject {
+		private Map<String, String> strMap;
+	}
 }
