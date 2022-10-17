@@ -415,6 +415,19 @@ public final class InnerSpec {
 		return this;
 	}
 
+	public InnerSpec allValue(@Nullable Object value) {
+		arbitraryManipulators.add(new ArbitraryManipulator(
+				new CompositeNodeResolver(
+					this.treePathResolver,
+					new DefaultNodeResolver(new NodeAllEntryPredicate()),
+					new DefaultNodeResolver(new NodeKeyValuePredicate(false))
+				),
+				convertToNodeManipulator(value)
+			)
+		);
+		return this;
+	}
+
 	public List<ArbitraryManipulator> getArbitraryManipulators() {
 		return arbitraryManipulators;
 	}
