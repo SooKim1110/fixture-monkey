@@ -427,4 +427,13 @@ class InnerSpecTest {
 		then(actual.getIntegerMap().keySet()).allMatch(it-> it >= 0 && it <= 100);
 		then(actual.getIntegerMap().values()).allMatch(it-> it >= 0 && it <= 100);
 	}
+
+	@Property
+	void allValue() {
+		MapObject actual = SUT.giveMeBuilder(MapObject.class)
+			.setInner("strMap", m -> m.allValue("value"))
+			.sample();
+
+		then(actual.getStrMap().values()).allMatch(it-> it.equals("value"));
+	}
 }
