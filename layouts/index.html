@@ -14,7 +14,7 @@
 
 {{ define "sidebar-prefooter" }}
   {{ if eq $.Site.Language.LanguageName "English" }}
-<section class="section section-sm" style="background: url('/images/homepage.png') no-repeat center center / cover; min-height: 60vh; display: flex; flex-direction: column; justify-content: center; text-align: center; color: white;">
+<section class="section section-sm" style="background: url('https://sookim1110.github.io/fixture-monkey/images/homepage.png') no-repeat center center / cover; min-height: 60vh; display: flex; flex-direction: column; justify-content: center; text-align: center; color: white;">
   <div class="row justify-content-center">
     <div class="col-lg-12">
       <h1 class="mt-0">{{ .Title }}</h1>
@@ -22,7 +22,7 @@
     </div>
     <div class="col-lg-9 col-xl-8">
       <p class="lead">{{ .Params.lead | safeHTML }}</p>
-      <a class="btn btn-primary btn-lg px-4 mb-2" href="/docs/get-started/requirements/" role="button">{{ i18n "get-started" }}</a>
+      <a class="btn btn-primary btn-lg px-4 mb-2" href="/fixture-monkey/docs/get-started/requirements/" role="button">{{ i18n "get-started" }}</a>
     </div>
   </div>
 </section>
