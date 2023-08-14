@@ -1,6 +1,6 @@
 [[main]]
 name = "Docs"
-url = "/docs/introduction/overview"
+url = "/docs/introduction/overview/"
 weight = 10
 
 [[docs]]
@@ -37,7 +37,7 @@ url = "/docs/fixture-monkey-options/"
 name = "Release Notes"
 weight = 20
 identifier = "release-notes"
-url = "/release-notes"
+url = "/release-notes/"
 
 [[social]]
 name = "GitHub"
